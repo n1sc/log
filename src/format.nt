@@ -1,0 +1,17 @@
+use fmt
+use strings
+
+use "clock.nt" as log_clock
+use "level.nt" as log_level
+
+/// One log line: `<stamp> <LEVEL> <target>: <message>`.
+fun line(view string level, view string target, view string message) -> string {
+    var name = "app"
+    if (!strings.is_empty(target)) {
+        name = copy(target)
+    }
+    var stamp = log_clock.stamp()
+    var label = fmt.pad_right(log_level.label(level), 5, 32)
+    var prefix = stamp + " " + label + " " + name + ": "
+    return prefix + copy(message)
+}

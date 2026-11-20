@@ -1,0 +1,5 @@
+[package]
+name = "log"
+entry = "src/lib.nt"
+output = "log"
+compiler = "^0.1"

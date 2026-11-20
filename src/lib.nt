@@ -1,0 +1,132 @@
+//! Levelled logging to standard error.
+//!
+//! The threshold lives in the `NTSC_LOG_LEVEL` environment variable, so it can
+//! be set from the program with [`set_level`] or from outside the process
+//! (`NTSC_LOG_LEVEL=debug ./program`). It applies to the whole process and to
+//! child processes.
+//!
+//! Every function here delegates to one of the focused modules beside this
+//! file; the entry file is the package's public surface.
+
+use arrays
+use os
+use strings
+use sys
+
+use "format.nt" as log_format
+use "level.nt" as log_level
+use "sink.nt" as log_sink
+
+/// Environment variable holding the threshold.
+private fun level_var() -> string {
+    return "NTSC_LOG_LEVEL"
+}
+
+/// The program's file name, used when no target is given.
+private fun default_target() -> string {
+    var args = sys.args()
+    if (arrays.length(args) == 0) {
+        return "app"
+    }
+    var name = os.path_basename(arrays.get(args, 0))
+    if (strings.is_empty(name)) {
+        return "app"
+    }
+    return name
+}
+
+/// Set the process-wide threshold: `debug`, `info`, `warn`, `error` or `off`.
+fun set_level(view string level) {
+    if (!log_level.valid(level)) {
+        throw "log.set_level: unknown level '" + copy(level) + "'"
+    }
+    os.setenv(level_var(), strings.lower(level))
+}
+
+/// The current threshold; `info` when unset or unrecognized.
+fun level() -> string {
+    var configured = strings.lower(os.getenv(level_var()))
+    if (!log_level.valid(configured)) {
+        return "info"
+    }
+    return configured
+}
+
+/// Whether a message at `level_name` would be written right now.
+fun enabled(view string level_name) -> bool {
+    if (!log_level.valid(level_name)) {
+        return false
+    }
+    if (level_name == "off") {
+        return false
+    }
+    var threshold = level()
+    if (threshold == "off") {
+        return false
+    }
+    return log_level.rank(level_name) >= log_level.rank(threshold)
+}
+
+/// Write `message` at `level_name` under `target`.
+fun write(view string level_name, view string target, view string message) {
+    if (!log_level.valid(level_name)) {
+        throw "log.write: unknown level '" + copy(level_name) + "'"
+    }
+    if (level_name == "off") {
+        throw "log.write: 'off' is not a message level"
+    }
+    if (!enabled(level_name)) {
+        return
+    }
+    log_sink.write(log_format.line(level_name, target, message))
+}
+
+/// Format a line without writing it.
+fun format(view string level_name, view string target, view string message) -> string {
+    return log_format.line(level_name, target, message)
+}
+
+/// The target used by the single-argument helpers: the program's file name.
+fun target() -> string {
+    return default_target()
+}
+
+/// Write a debug message.
+fun debug(view string message) {
+    write("debug", default_target(), message)
+}
+
+/// Write an informational message.
+fun info(view string message) {
+    write("info", default_target(), message)
+}
+
+/// Write a warning.
+fun warn(view string message) {
+    write("warn", default_target(), message)
+}
+
+/// Write an error.
+fun error(view string message) {
+    write("error", default_target(), message)
+}
+
+/// Write a debug message under `target`.
+fun debug_from(view string target, view string message) {
+    write("debug", target, message)
+}
+
+/// Write an informational message under `target`.
+fun info_from(view string target, view string message) {
+    write("info", target, message)
+}
+
+/// Write a warning under `target`.
+fun warn_from(view string target, view string message) {
+    write("warn", target, message)
+}
+
+/// Write an error under `target`.
+fun error_from(view string target, view string message) {
+    write("error", target, message)
+}

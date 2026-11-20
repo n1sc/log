@@ -1,0 +1,7 @@
+use io
+
+/// Write one line to standard error and flush it.
+fun write(view string text) {
+    io.write_line(io.stderr(), text)
+    io.flush(io.stderr())
+}

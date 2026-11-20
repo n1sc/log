@@ -1,0 +1,52 @@
+use strings
+
+/// Whether `level` is one of `debug`, `info`, `warn`, `error`, `off`.
+fun valid(view string level) -> bool {
+    var name = strings.lower(level)
+    if (name == "debug") {
+        return true
+    }
+    if (name == "info") {
+        return true
+    }
+    if (name == "warn") {
+        return true
+    }
+    if (name == "error") {
+        return true
+    }
+    if (name == "off") {
+        return true
+    }
+    return false
+}
+
+/// Numeric rank used for threshold comparisons; unknown levels rank `0`.
+fun rank(view string level) -> int {
+    var name = strings.lower(level)
+    if (name == "debug") {
+        return 10
+    }
+    if (name == "info") {
+        return 20
+    }
+    if (name == "warn") {
+        return 30
+    }
+    if (name == "error") {
+        return 40
+    }
+    if (name == "off") {
+        return 100
+    }
+    return 0
+}
+
+/// Uppercase label for `level`; `LEVEL` when the name is unknown.
+fun label(view string level) -> string {
+    var name = strings.lower(level)
+    if (!valid(name)) {
+        return "LEVEL"
+    }
+    return strings.upper(name)
+}

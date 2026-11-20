@@ -1,0 +1,6 @@
+use time
+
+/// Current UTC time as `2026-11-20T16:57:00Z`.
+fun stamp() -> string {
+    return time.format(time.now(), "%Y-%m-%dT%H:%M:%SZ")
+}
